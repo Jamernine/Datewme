@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will u be my date</title>
+    <link rel="preload" href="cute-sound.mp3" as="audio">
+    <style>
+        /* Reset */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #ffd6f8;
+            background-image: url('texture.png'), 
+                              repeating-linear-gradient(135deg,#ffb6e6 0px,#ffd6f8 100px);
+            font-family: 'Press Start 2P', 'VT323', monospace, sans-serif;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            color: #ff6fa5;
+            font-family: 'Press Start 2P', 'VT323', monospace, sans-serif;
+            margin: 2rem 0 1rem 0;
+            letter-spacing: .1rem;
+            text-shadow: 2px 2px 0 #fff0fa, 4px 4px 0 #ffb6e6;
+        }
+
+        .maze-container {
+            background: rgba(255,255,255,0.7);
+            border: 4px solid #ffb6e6;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 4px 24px #ffc8e7;
+            margin-bottom: 2rem;
+        }
+
+        #maze-canvas {
+            display: block;
+            margin: 0 auto;
+            background: #fff0fa;
+            border: 2px solid #ff6fa5;
+            border-radius: 10px;
+        }
+
+        .start-screen {
+            background: rgba(255,255,255,0.85);
+            border: 2px solid #ffb6e6;
+            border-radius: 15px;
+            padding: 2rem 2.5rem;
+            margin: 0 auto 1rem auto;
+            width: 340px;
+            max-width: 90vw;
+            box-shadow: 0 2px 8px #ffc8e7;
+        }
+        .start-title {
+            font-size: 1.3rem;
+            color: #ff6fa5;
+            margin-bottom: 1rem;
+            letter-spacing: .1rem;
+        }
+        .start-btn {
+            background: #ff6fa5;
+            color: #fff;
+            border: none;
+            font-size: 1rem;
+            padding: .6rem 2.2rem;
+            border-radius: 10px;
+            font-family: inherit;
+            cursor: pointer;
+            box-shadow: 2px 2px 0 #fff0fa, 4px 4px 0 #ffb6e6;
+            margin-top: 1rem;
+            transition: background .15s;
+        }
+        .start-btn:hover {
+            background: #ffb6e6;
+        }
+
+        /* Cute heart icon for goal/character */
+        .emoji {
+            font-size: 1.2rem;
+        }
+    </style>
+    <!-- Cute pixel font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="title">Will u be my date</div>
+    <div class="maze-container">
+        <div id="startScreen" class="start-screen">
+            <div class="start-title">Maze Mini Game</div>
+            <button class="start-btn" onclick="startGame()">Start Game</button>
+        </div>
+        <canvas id="maze-canvas" width="320" height="320" style="display:none"></canvas>
+    </div>
+    <audio id="cuteSound" src="cute-sound.mp3" preload="auto"></audio>
+    <script>
+        // Maze definition: 0 = wall, 1 = path
+        const maze = [
+            [0,0,0,0,0,0,0,0,0,0],
+            [0,1,1,1,0,1,1,1,1,0],
+            [0,1,0,1,0,1,0,0,1,0],
+            [0,1,0,1,1,1,0,1,1,0],
+            [0,1,0,0,0,1,0,1,0,0],
+            [0,1,1,1,0,1,1,1,0,0],
+            [0,0,0,1,0,0,0,1,0,0],
+            [0,1,1,1,1,1,0,1,1,0],
+            [0,1,0,0,0,1,1,1,0,0],
+            [0,0,0,0,0,0,0,0,0,0]
+        ];
+        const tileSize = 32;
+        let player = { x: 1, y: 1 };
+        const goal = { x: 8, y: 7 };
+
+        const canvas = document.getElementById('maze-canvas');
+        const ctx = canvas.getContext('2d');
+        let gameActive = false;
+
+        function drawMaze() {
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[y].length; x++) {
+                    // Tiles
+                    if (maze[y][x] === 0) {
+                        ctx.fillStyle = "#ffb6e6"; // wall - pink
+                        ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
+                        // Cute texture overlay
+                        ctx.fillStyle = "#fff0fa";
+                        ctx.fillRect(x*tileSize + 8, y*tileSize + 8, 16, 16);
+                    } else {
+                        ctx.fillStyle = "#fffafc"; // path
+                        ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
+                    }
+                }
+            }
+            // Draw goal (heart)
+            ctx.font = "24px 'Press Start 2P', 'VT323', monospace";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("💖", goal.x * tileSize + tileSize/2, goal.y * tileSize + tileSize/2);
+            // Draw player (smile)
+            ctx.fillText("😊", player.x * tileSize + tileSize/2, player.y * tileSize + tileSize/2);
+        }
+
+        function startGame() {
+            document.getElementById('startScreen').style.display = "none";
+            canvas.style.display = "block";
+            gameActive = true;
+            player = { x: 1, y: 1 };
+            drawMaze();
+            playCuteSound();
+        }
+
+        function playCuteSound() {
+            const audio = document.getElementById('cuteSound');
+            audio.currentTime = 0;
+            audio.play();
+        }
+
+        function winGame() {
+            setTimeout(() => {
+                alert("You did it! 💖\nWill u be my date?");
+                document.getElementById('startScreen').style.display = "block";
+                canvas.style.display = "none";
+                playCuteSound();
+            }, 100);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+            let {x, y} = player;
+            if (e.key === "ArrowUp") y--;
+            else if (e.key === "ArrowDown") y++;
+            else if (e.key === "ArrowLeft") x--;
+            else if (e.key === "ArrowRight") x++;
+            else return;
+            // Bounds and wall check
+            if (maze[y] && maze[y][x] === 1) {
+                player = {x, y};
+                drawMaze();
+                playCuteSound();
+                if (player.x === goal.x && player.y === goal.y) {
+                    gameActive = false;
+                    winGame();
+                }
+            }
+        });
+    </script>
+    <!--
+        Assets required:
+        - cute-sound.mp3: Add a cute pop/chime sound!
+        - texture.png: (Optional) A soft pink repeating tile or cloud texture for even more cuteness.
+        Replace these with your own assets for your final build.
+        Reference: ![image1](image1)
+    -->
+</body>
+</html>
