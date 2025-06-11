@@ -254,7 +254,9 @@
     // Music play on user interaction (for mobile autoplay policies)
     function ensureMusic() {
       const bgm = document.getElementById('bgm');
-      if (bgm.paused) bgm.play();
+      if (bgm.paused) {
+        bgm.play();
+      }
     }
     document.addEventListener('click', ensureMusic);
     document.addEventListener('keydown', ensureMusic);
