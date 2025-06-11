@@ -250,7 +250,9 @@
     }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
-
+    
+<audio id="bgm" src="bg-music.mp3" loop></audio>
+    <script>
     // Music play on user interaction (for mobile autoplay policies)
     function ensureMusic() {
       const bgm = document.getElementById('bgm');
